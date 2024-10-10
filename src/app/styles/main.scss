@@ -1425,7 +1425,7 @@ $italianfont:'Italianno', ;
   cursor: pointer;
   text-decoration: none;
   float: right;
-  top: -58px;
+  top: -36px;
 }
 
 .m-button-5::before {
@@ -1449,4 +1449,29 @@ $italianfont:'Italianno', ;
 .m-button-5:hover {
   /* width:100%; */
   color: #FFF;
+}
+
+.m-button-7 {
+  background-color: #16274f; /* Green background */
+  color: white; /* White text */
+  padding: 10px 20px; /* Padding inside the button */
+  border: none; /* Remove border */
+  border-radius: 20px; /* Rounded corners */
+  font-size: 16px; /* Increase font size */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition on hover */
+}
+
+.m-button-7:hover {
+  background-color:#16274f; /* Darker green on hover */
+  transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+.m-button-7:disabled {
+  background-color: #cccccc; /* Grey background when disabled */
+  cursor: not-allowed; /* Disabled cursor */
+}
+
+.m-button-7:active {
+  transform: scale(0.98); /* Slight button press effect */
 }
