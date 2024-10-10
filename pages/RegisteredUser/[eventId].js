@@ -5,6 +5,7 @@ import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { useRouter } from 'next/router'; 
 import Layout from '../../component/Layout';
 import "../../src/app/styles/main.scss";
+import ExportToExcel from '../admin/ExporttoExcel';
 
 const RegisteredUsers = () => {
   const router = useRouter();
@@ -69,18 +70,19 @@ const RegisteredUsers = () => {
   return (
     <Layout>
   <section className='c-userslist box'>
-    <h2>Registered Users</h2>
+    {/* <h2>Registered Users</h2> */}
+    <ExportToExcel eventId={eventId}/>
     <button className="m-button-5" onClick={() => window.history.back()}>
     Back
   </button> 
     {error && <p style={{ color: 'red' }}>{error}</p>}
-    
+   
     {/* User Table */}
     <table className='table-class'>
       <thead>
         <tr>
           <th>Sr no</th>
-          <th>User</th>
+          <th>Registered User</th>
           <th>Phone</th>
           <th>Feedback</th>
           <th>Actions</th>
