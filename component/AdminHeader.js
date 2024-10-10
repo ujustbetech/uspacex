@@ -33,7 +33,7 @@ const Header = () => {
               }) 
               
               localStorage.removeItem("ucoreadmin");
-              Router.push("/admin/login");      
+              Router.push("/admin/admin-login");      
                 
              
             }},
