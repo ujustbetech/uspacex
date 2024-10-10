@@ -25,7 +25,6 @@ const AdminLogin = () => {
   return (
     <div className={styles.loginWrapper}>
       <form onSubmit={handleLogin} className={styles.loginForm}>
-        <h2>Admin Login</h2>
         {error && <p className={styles.errorMessage}>{error}</p>}
         <div className={styles.inputGroup}>
           <label htmlFor="email">Email:</label>
