@@ -471,6 +471,7 @@ $italianfont:'Italianno', ;
   position: fixed;
   top: 0px;
   z-index: 2;
+  cursor: pointer;
   &.expand {
     // width: 300px;
 
@@ -529,6 +530,7 @@ $italianfont:'Italianno', ;
   overflow: auto;
   z-index: 1;
   box-sizing: border-box;
+  cursor: pointer;
 
   .headerRight {
     display: flex;
@@ -1334,7 +1336,7 @@ $italianfont:'Italianno', ;
   position: relative;
   overflow: hidden;
   color: var(--orange);
-  z-index: 1;
+  z-index: 0;
   border: 1px solid var(--orange);
   background-color: transparent;
   display: flex;
@@ -1411,7 +1413,7 @@ $italianfont:'Italianno', ;
   position: relative;
   overflow: hidden;
   color: #16274f;
-  z-index: 1;
+  z-index: 0;
   border: 1px solid #16274f;
   background-color: transparent;
   display: flex;
@@ -1475,3 +1477,480 @@ $italianfont:'Italianno', ;
 .m-button-7:active {
   transform: scale(0.98); /* Slight button press effect */
 }
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+}
+
+/* Loader styles */
+.load {
+  width: 3.25em;
+  transform-origin: center;
+  animation: rotate4 2s linear infinite;
+}
+ 
+circle {
+  fill: none;
+  stroke: hsl(214, 97%, 59%);
+  stroke-width: 2;
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  animation: dash4 1.5s ease-in-out infinite;
+}
+ 
+@keyframes rotate4 {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+ 
+@keyframes dash4 {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dashoffset: -125px;
+  }
+}
+/* Modal Overlay */
+// .modal-overlay {
+//   background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+// }
+
+// /* Modal Container */
+// .modal-content {
+//   position: absolute;
+//   top: 50%;
+//   left: 50%;
+//   transform: translate(-50%, -50%);
+//   background: white; /* White background */
+//   border-radius: 8px; /* Rounded corners */
+//   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow */
+//   padding: 20px; /* Padding around content */
+//   width: 80%; /* Width of the modal */
+//   max-width: 500px; /* Maximum width */
+//   z-index: 1000; /* Ensure it's on top */
+// }
+
+// /* Modal Title */
+// .modal-title {
+//   margin-bottom: 20px; /* Spacing below title */
+//   font-size: 24px; /* Title font size */
+//   color: #333; /* Darker text color */
+// }
+
+// /* Feedback List */
+// .feedback-list {
+//   list-style-type: none; /* Remove default list styling */
+//   padding: 0; /* Remove padding */
+// }
+
+// /* Feedback List Item */
+// .feedback-item {
+//   margin-bottom: 10px; /* Spacing between items */
+//   padding: 10px; /* Padding inside items */
+//   border: 1px solid #ccc; /* Light border */
+//   border-radius: 5px; /* Slightly rounded corners */
+// }
+
+// /* Strong and Emphasis Styles */
+// .feedback-type {
+//   color: #007bff; /* Link color for strong elements */
+// }
+
+// .feedback-reason {
+//   color: #007bff; /* Link color for strong elements */
+// }
+
+// .feedback-timestamp {
+//   color: #777; /* Lighter color for timestamp */
+//   font-size: 0.9em; /* Slightly smaller font */
+// }
+
+// /* Close Button */
+// .close-button {
+//   margin-top: 20px; /* Spacing above button */
+//   padding: 10px 20px; /* Button padding */
+//   background-color: #007bff; /* Primary button color */
+//   color: white; /* Button text color */
+//   border: none; /* Remove default border */
+//   border-radius: 5px; /* Rounded corners */
+//   cursor: pointer; /* Pointer cursor on hover */
+//   font-size: 16px; /* Button text size */
+//   transition: background-color 0.3s; /* Transition effect for hover */
+// }
+
+// /* Close Button Hover Effect */
+// .close-button:hover {
+//   background-color: #0056b3; /* Darker shade on hover */
+// }
+
+// /* Style for the feedback select dropdown */
+// .feedback-select {
+//   padding: 10px; /* Padding inside the dropdown */
+//   border: 1px solid #ccc; /* Light border */
+//   border-radius: 5px; /* Rounded corners */
+//   background-color: white; /* White background */
+//   font-size: 16px; /* Font size */
+//   width: 100%; /* Full width */
+//   max-width: 250px; /* Maximum width reduced to 250px */
+//   margin-bottom: 15px; /* Space below the dropdown */
+//   transition: border-color 0.3s; /* Smooth border color transition */
+// }
+
+// /* Change border color on focus */
+// .feedback-select:focus {
+//   border-color: #007bff; /* Change to primary color on focus */
+//   outline: none; /* Remove default outline */
+// }
+
+// /* Style for the feedback input field */
+// .feedback-input {
+//   padding: 10px; /* Padding inside the input */
+//   border: 1px solid #ccc; /* Light border */
+//   border-radius: 5px; /* Rounded corners */
+//   background-color: white; /* White background */
+//   font-size: 16px; /* Font size */
+//   width: 100%; /* Full width */
+//   max-width: 250px;
+//   transition: border-color 0.3s; 
+// }
+
+// /* Change border color on focus */
+// .feedback-input:focus {
+//   border-color: #007bff; 
+//   outline: none; 
+// }
+
+// /* Placeholder color */
+// .feedback-input::placeholder {
+//   color: #aaa; 
+// }
+
+.twobtn{
+  display: flex;
+  gap: 20px;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 600px; /* Adjusted for better form spacing */
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.modal h2{
+  color: #16274f;
+  font-family: 'Forum', sans-serif;
+}
+
+.overlay {
+  background: rgba(0, 0, 0, 0.8);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+}
+
+.leave-container {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.form-group input, 
+.form-group textarea {
+  width: 97%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+.button-container{width:100%; display: flex; justify-content: space-between; column-gap: 20px;}
+.m-button-3.submit-btn, .m-button-4.submit-btn{width: 45%;}
+.date-group {
+  display: flex;
+  gap: 30px; /* Adjusted space between start and end date fields */
+}
+
+.date-group .form-group {
+  flex: 1;
+}
+
+.button-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons, .back-button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.buttons {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.buttons:hover {
+  background-color: #0056b3;
+}
+
+.back-button {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
+
+/* Style for the dropdown */
+.form-group select {
+width: 100%;
+padding: 10px;
+border-radius: 5px;
+border: 1px solid #ccc;
+font-size: 16px;
+background-color: #fff;
+appearance: none; /* Hides the default dropdown arrow */
+background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="#333" d="M2 0L0 2h4z"/></svg>'); /* Custom arrow */
+background-repeat: no-repeat;
+background-position: right 10px center; /* Position the arrow */
+background-size: 10px; /* Adjust the size of the arrow */
+cursor: pointer;
+}
+
+/* Hover and focus states */
+.form-group select:hover, .form-group select:focus {
+border-color: #007bff;
+outline: none;
+}
+
+/* Dropdown arrow positioning */
+.form-group {
+position: relative;
+}
+
+.form-group select:focus {
+outline: none;
+}
+
+/* Adjusting the custom arrow's container */
+.form-group select::-ms-expand {
+display: none; /* For IE */
+}
+.search {
+  width: 100%;
+  position: relative;
+  display: flex;
+}
+
+.searchTerm {
+  width: 100%;
+  border: 2px solid #e2e2e2;
+  border-right: none;
+  padding: 5px;
+  height: 20px;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+  color: #9DBFAF;
+}
+
+.searchTerm:focus{
+  color: black;
+}
+
+.searchButton {
+  width: 30px;
+  height: 32px;
+  border: 1px solid #e2e2e2;
+  background: #e2e2e2;
+  text-align: center;
+  color: #fff;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/*Resize the wrap to see the search bar change!*/
+// .wrap{
+//   width: 30%;
+//   position: absolute;
+//   top: 50%;
+//   left: 50%;
+//   transform: translate(-50%, -50%);
+// }
+
+/* Modal Styles */
+.feedback-modal {
+  background-color: white;
+  width: 60%;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.closes-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.modal-title {
+  font-size: 24px;
+  color: #505D69;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Feedback Table */
+.feedback-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.feedback-table thead {
+  background-color: #f0f0f0;
+}
+
+.feedback-table th, .feedback-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.feedback-table th {
+  background-color: white;
+  font-weight: bold;
+}
+
+.feedback-table td {
+  font-size: 16px;
+  color: #505D69;
+}
+
+.feedback-table tr:nth-child(even) {
+  background-color: #f1f5f7;
+}
+
+.no-feedback-message {
+  text-align: center;
+  color: #777;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feedback-modal {
+    width: 90%;
+  }
+
+  .feedback-table th, .feedback-table td {
+    font-size: 12px;
+  }
+}
+
+
+.leave-requests-container {
+  padding: 35px;
+    background-color: #fff;
+    background-clip: border-box;
+    min-width: 0;
+    word-wrap: break-word;
+    border-radius: 0.4rem;
+}
+
+.leave-container {
+  margin-bottom: 20px;
+}
+
+.leave-container label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+  font-weight: 400;
+  color: #323232;
+}
+
+
+
+
+.file-input {
+  display: block; /* Ensure it's visible */
+  margin: 10px 0; /* Add space around */
+  width: 96%;
+  padding: 10px; /* Some padding for visibility */
+  border: 1px solid #ccc; /* Border to see it */
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+

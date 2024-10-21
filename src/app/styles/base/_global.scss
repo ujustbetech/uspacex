@@ -128,7 +128,7 @@ body{
 }
 
 .form-row{
-    input[type="date"]{
+    input[type="datetime-local"]{
         width: 100%;
         padding: 10px;
         // padding-right: 40px;
@@ -194,6 +194,7 @@ body{
   border: 5px solid #f0f4fd;
   border-bottom-color: #fe6f06;
   border-radius: 50%;
+  align-items: center;
   display: inline-block;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
@@ -210,8 +211,10 @@ body{
 .loader{
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  align-items:flex-start;
+  // padding-left: 400px;
+   height: 100vh;
+   padding-top: 200px;
 }
 
 .popup-box {

@@ -57,15 +57,15 @@ const UploadExcel = () => {
   </button>
     <ul>
    
-                    <h4>Select File</h4>
+                  
 
-                    <div className='form-row'>
-      <input type="file" onChange={handleFileUpload} accept=".xlsx, .xls" />
-      </div>
+    <div className="upload-container">
+    <input type="file" id="fileUpload" className="file-input" onChange={handleFileUpload} accept=".xlsx, .xls" />
+    </div>
    
       <li className='form-row'>
                     <div>
-                        <button className='submitbtn' onClick={uploadDataToFirestore}>Upload</button>
+                        <button className='m-button-7' onClick={uploadDataToFirestore}  style={{ backgroundColor: '#f16f06', color: 'white' }}>Upload</button>
                 
                     </div>    
                 </li>

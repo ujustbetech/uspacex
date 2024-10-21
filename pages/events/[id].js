@@ -165,8 +165,16 @@ const EventLoginPage = () => {
   }
 
   const eventTime = eventDetails?.time?.seconds
-    ? new Date(eventDetails.time.seconds * 1000).toLocaleString()
-    : "Invalid time";
+  ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short', // Abbreviated month name like "Jan"
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false // For 24-hour format
+    })
+  : "Invalid time";
+
 
   return (
     <div className="mainContainer">

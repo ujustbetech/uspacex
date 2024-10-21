@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
-import styles from '../../src/app/styles/AdminLogin.module.css'; 
+import styles from '../../src/app/styles/AdminLogin.module.css';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ const AdminLogin = () => {
     try {
       // Sign in with Firebase Authentication
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/admin/addEvent'); // Redirect to the Admin Panel after successful login
+      router.push('/admin/event/addEvent'); // Redirect to the Admin Panel after successful login
     } catch (err) {
       setError('Invalid email or password');
       console.error('Error logging in:', err);
@@ -25,9 +25,10 @@ const AdminLogin = () => {
   return (
     <div className={styles.loginWrapper}>
       <form onSubmit={handleLogin} className={styles.loginForm}>
+        {/* <h2>Admin Login</h2> */}
         {error && <p className={styles.errorMessage}>{error}</p>}
         <div className={styles.inputGroup}>
-          <label htmlFor="email">Email:</label>
+          <label htmlFor="email">Email:<sup>*</sup></label>
           <input
             type="email"
             id="email"
@@ -37,7 +38,7 @@ const AdminLogin = () => {
           />
         </div>
         <div className={styles.inputGroup}>
-          <label htmlFor="password">Password:</label>
+          <label htmlFor="password">Password:<sup>*</sup></label>
           <input
             type="password"
             id="password"

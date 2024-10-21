@@ -16,7 +16,8 @@ const ExportToExcel = ({ eventId }) => {
 
       // Fetch user details for each registered user
       const userDetailsPromises = registeredUsersSnapshot.docs.map(async (docSnapshot) => {
-        const userPhoneNumber = docSnapshot.data().phoneNumber; // Assuming phoneNumber field is used
+        const userPhoneNumber = docSnapshot.data().phoneNumber;
+        
         console.log('Fetching user details for:', userPhoneNumber);
 
         // Fetch user details from `/userdetails/{phoneNumber}` path
@@ -25,8 +26,10 @@ const ExportToExcel = ({ eventId }) => {
 
         if (userDocSnapshot.exists()) {
           const userDetails = userDocSnapshot.data();
-          const name = userDetails[" Name"] || 'N/A'; // Directly access the field with space
-          return { phone: userPhoneNumber, name }; // Return an object with phone and name
+          const name = userDetails[" Name"] || 'N/A';
+          const role = userDetails["Category"] || 'User';
+          const ujb = userDetails["UJB Code"] || 'N/A';
+          return { phone: userPhoneNumber, name , role , ujb}; // Return an object with phone and name
         } else {
           console.log(`User document not found for phone number: ${userPhoneNumber}`);
           return null; // Return null if the document doesn't exist
@@ -43,7 +46,9 @@ const ExportToExcel = ({ eventId }) => {
       const data = filteredUserDetails.map((user, index) => ({
         SrNo: index + 1,
         Name: user.name,
-        Phone: user.phone
+        Phone: user.phone,
+        Role: user.role,
+        UJB: user.ujb
       }));
 
       if (data.length === 0) {
