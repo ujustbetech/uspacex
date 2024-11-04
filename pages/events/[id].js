@@ -180,7 +180,7 @@ const EventLoginPage = () => {
     <div className="mainContainer">
       <div className='UserDetails'>
         <h1 className="welcomeText">Welcome {userName || 'User'}</h1>
-        <h2 className="eventName">to {eventDetails.name}</h2>
+        <h2 className="eventName">{eventDetails.name}</h2>
       </div>
       <div className="eventDetails">
         <p> {eventTime}</p>
