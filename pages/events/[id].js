@@ -23,9 +23,11 @@ const EventLoginPage = () => {
     const userPhoneNumber = localStorage.getItem('userPhoneNumber');
     if (userPhoneNumber) {
       setIsLoggedIn(true);
-      fetchEventDetails();
+      fetchEventDetails(userPhoneNumber); // Pass phone number to fetch details
       fetchRegisteredUserCount();
       fetchUserName(userPhoneNumber); // Fetch user name
+    } else {
+      setLoading(false); // No user logged in
     }
   }, [id]);
 
@@ -42,7 +44,7 @@ const EventLoginPage = () => {
         setIsLoggedIn(true);
 
         await registerUserForEvent(phoneNumber);
-        fetchEventDetails();
+        fetchEventDetails(phoneNumber);
         fetchRegisteredUserCount();
         fetchUserName(phoneNumber); // Fetch user name after login
       } else {
@@ -83,14 +85,25 @@ const EventLoginPage = () => {
   };
 
   // Fetch event details from Firestore
-  const fetchEventDetails = async () => {
+  const fetchEventDetails = async (userPhoneNumber) => {
     if (id) {
       const eventRef = doc(db, 'monthlymeet', id);
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
-        console.log(eventDoc.data());
         
+        // Check if user is registered for this event
+        const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
+        const userSnapshot = await getDocs(registeredUsersRef);
+        const registeredUsers = userSnapshot.docs.map(doc => doc.id);
+        
+        if (!registeredUsers.includes(userPhoneNumber)) {
+          // User is not registered for the event
+          localStorage.removeItem('userPhoneNumber'); // Clear localStorage
+          setIsLoggedIn(false); // Update login state
+          setPhoneNumber(''); // Clear the phone number input
+          return; // Return to show login form
+        }
       } else {
         setError('No event found.');
       }
@@ -165,25 +178,24 @@ const EventLoginPage = () => {
   }
 
   const eventTime = eventDetails?.time?.seconds
-  ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'short', // Abbreviated month name like "Jan"
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false // For 24-hour format
-    })
-  : "Invalid time";
-
+    ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short', // Abbreviated month name like "Jan"
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false // For 24-hour format
+      })
+    : "Invalid time";
 
   return (
     <div className="mainContainer">
       <div className='UserDetails'>
         <h1 className="welcomeText">Welcome {userName || 'User'}</h1>
-        <h2 className="eventName">{eventDetails.name}</h2>
+        <h2 className="eventName">to {eventDetails.name}</h2>
       </div>
       <div className="eventDetails">
-        <p> {eventTime}</p>
+        <p>{eventTime}</p>
         <h2>{registeredUserCount}</h2>
         <p>Registered Orbiters</p>
       </div>
@@ -203,7 +215,6 @@ const EventLoginPage = () => {
           <div className="modal-content">
             <button className="close-modal" onClick={handleCloseModal}>×</button>
             <h2>Agenda</h2>
-            
             {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
               <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} >
               </div>
