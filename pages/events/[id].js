@@ -22,30 +22,12 @@ const EventLoginPage = () => {
   useEffect(() => {
     const userPhoneNumber = localStorage.getItem('userPhoneNumber');
     if (userPhoneNumber) {
-      checkUserRegistration(userPhoneNumber); // Check if user is registered
-    } else {
-      setLoading(false); // No user logged in
+      setIsLoggedIn(true);
+      fetchEventDetails();
+      fetchRegisteredUserCount();
+      fetchUserName(userPhoneNumber); // Fetch user name
     }
   }, [id]);
-
-  const checkUserRegistration = async (userPhoneNumber) => {
-    const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
-    const userSnapshot = await getDocs(registeredUsersRef);
-    const registeredUsers = userSnapshot.docs.map(doc => doc.id);
-
-    if (registeredUsers.includes(userPhoneNumber)) {
-      setIsLoggedIn(true);
-      setPhoneNumber(userPhoneNumber); // Set the phone number if registered
-      fetchUserName(userPhoneNumber); // Fetch user name
-      fetchEventDetails(userPhoneNumber); // Fetch event details
-      fetchRegisteredUserCount();
-    } else {
-      // User is not registered
-      localStorage.removeItem('userPhoneNumber'); // Clear localStorage
-      setIsLoggedIn(false); // Update login state
-      setLoading(false); // Stop loading
-    }
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -57,11 +39,12 @@ const EventLoginPage = () => {
 
       if (response.data.message[0].type === 'SUCCESS') {
         localStorage.setItem('userPhoneNumber', phoneNumber);
-        await registerUserForEvent(phoneNumber); // Register the user for the event
         setIsLoggedIn(true);
+
+        await registerUserForEvent(phoneNumber);
+        fetchEventDetails();
+        fetchRegisteredUserCount();
         fetchUserName(phoneNumber); // Fetch user name after login
-        fetchEventDetails(phoneNumber); // Fetch event details after login
-        fetchRegisteredUserCount(); // Fetch count after login
       } else {
         setError('Phone number not registered.');
       }
@@ -100,12 +83,14 @@ const EventLoginPage = () => {
   };
 
   // Fetch event details from Firestore
-  const fetchEventDetails = async (userPhoneNumber) => {
+  const fetchEventDetails = async () => {
     if (id) {
       const eventRef = doc(db, 'monthlymeet', id);
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
+        console.log(eventDoc.data());
+        
       } else {
         setError('No event found.');
       }
@@ -180,15 +165,16 @@ const EventLoginPage = () => {
   }
 
   const eventTime = eventDetails?.time?.seconds
-    ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short', // Abbreviated month name like "Jan"
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false // For 24-hour format
-      })
-    : "Invalid time";
+  ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short', // Abbreviated month name like "Jan"
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false // For 24-hour format
+    })
+  : "Invalid time";
+
 
   return (
     <div className="mainContainer">
@@ -197,7 +183,7 @@ const EventLoginPage = () => {
         <h2 className="eventName">to {eventDetails.name}</h2>
       </div>
       <div className="eventDetails">
-        <p>{eventTime}</p>
+        <p> {eventTime}</p>
         <h2>{registeredUserCount}</h2>
         <p>Registered Orbiters</p>
       </div>
@@ -217,6 +203,7 @@ const EventLoginPage = () => {
           <div className="modal-content">
             <button className="close-modal" onClick={handleCloseModal}>×</button>
             <h2>Agenda</h2>
+            
             {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
               <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} >
               </div>
