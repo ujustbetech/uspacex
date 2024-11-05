@@ -22,14 +22,30 @@ const EventLoginPage = () => {
   useEffect(() => {
     const userPhoneNumber = localStorage.getItem('userPhoneNumber');
     if (userPhoneNumber) {
-      setIsLoggedIn(true);
-      fetchEventDetails(userPhoneNumber); // Pass phone number to fetch details
-      fetchRegisteredUserCount();
-      fetchUserName(userPhoneNumber); // Fetch user name
+      checkUserRegistration(userPhoneNumber); // Check if user is registered
     } else {
       setLoading(false); // No user logged in
     }
   }, [id]);
+
+  const checkUserRegistration = async (userPhoneNumber) => {
+    const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
+    const userSnapshot = await getDocs(registeredUsersRef);
+    const registeredUsers = userSnapshot.docs.map(doc => doc.id);
+
+    if (registeredUsers.includes(userPhoneNumber)) {
+      setIsLoggedIn(true);
+      setPhoneNumber(userPhoneNumber); // Set the phone number if registered
+      fetchUserName(userPhoneNumber); // Fetch user name
+      fetchEventDetails(userPhoneNumber); // Fetch event details
+      fetchRegisteredUserCount();
+    } else {
+      // User is not registered
+      localStorage.removeItem('userPhoneNumber'); // Clear localStorage
+      setIsLoggedIn(false); // Update login state
+      setLoading(false); // Stop loading
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -41,12 +57,11 @@ const EventLoginPage = () => {
 
       if (response.data.message[0].type === 'SUCCESS') {
         localStorage.setItem('userPhoneNumber', phoneNumber);
+        await registerUserForEvent(phoneNumber); // Register the user for the event
         setIsLoggedIn(true);
-
-        await registerUserForEvent(phoneNumber);
-        fetchEventDetails(phoneNumber);
-        fetchRegisteredUserCount();
         fetchUserName(phoneNumber); // Fetch user name after login
+        fetchEventDetails(phoneNumber); // Fetch event details after login
+        fetchRegisteredUserCount(); // Fetch count after login
       } else {
         setError('Phone number not registered.');
       }
@@ -91,19 +106,6 @@ const EventLoginPage = () => {
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
-        
-        // Check if user is registered for this event
-        const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
-        const userSnapshot = await getDocs(registeredUsersRef);
-        const registeredUsers = userSnapshot.docs.map(doc => doc.id);
-        
-        if (!registeredUsers.includes(userPhoneNumber)) {
-          // User is not registered for the event
-          localStorage.removeItem('userPhoneNumber'); // Clear localStorage
-          setIsLoggedIn(false); // Update login state
-          setPhoneNumber(''); // Clear the phone number input
-          return; // Return to show login form
-        }
       } else {
         setError('No event found.');
       }
