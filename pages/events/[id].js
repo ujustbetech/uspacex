@@ -18,15 +18,29 @@ const EventLoginPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false); // State to show/hide modal
 
+  // Clear session storage whenever the event ID changes (i.e., when a new event link is clicked)
+  useEffect(() => {
+    sessionStorage.removeItem('userPhoneNumber'); // Clear session storage
+    setIsLoggedIn(false); // Set login status to false
+    setPhoneNumber(''); // Reset phone number state
+    setUserName(''); // Reset user name state
+    setEventDetails(null); // Reset event details
+
+    fetchEventDetails();
+    fetchRegisteredUserCount();
+
+  }, [id]); // Runs whenever the event ID changes
+
   // Check if the user is already logged in from sessionStorage
   useEffect(() => {
     const userPhoneNumber = sessionStorage.getItem('userPhoneNumber');
     if (userPhoneNumber) {
       setIsLoggedIn(true);
-      fetchEventDetails();
-      fetchRegisteredUserCount();
       fetchUserName(userPhoneNumber); // Fetch user name
       checkRegisteredUser(userPhoneNumber); // Check if the user is registered for this event
+    } else {
+      // If no userPhoneNumber found in sessionStorage, redirect to login page
+      router.push("/login"); 
     }
   }, [id]);
 
@@ -39,7 +53,7 @@ const EventLoginPage = () => {
       });
 
       if (response.data.message[0].type === 'SUCCESS') {
-        sessionStorage.setItem('userPhoneNumber', phoneNumber); // Use sessionStorage for storing user session
+        sessionStorage.setItem('userPhoneNumber', phoneNumber); // Store in sessionStorage for the current session
         setIsLoggedIn(true);
 
         await registerUserForEvent(phoneNumber);
@@ -118,6 +132,7 @@ const EventLoginPage = () => {
         // Clear sessionStorage if the user is not registered for the event
         sessionStorage.clear();
         setIsLoggedIn(false);  // Set the user as not logged in
+        router.push("/login"); // Redirect to login page if the user is not registered
       }
     }
   };
@@ -190,7 +205,6 @@ const EventLoginPage = () => {
       })
     : "Invalid time";
 
-
   return (
     <div className="mainContainer">
       <div className='UserDetails'>
@@ -205,28 +219,9 @@ const EventLoginPage = () => {
       <div className="zoomLinkContainer">
         <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
           <img src="/zoom-icon.png" alt="Zoom Link" width={30} />
-          <span>Join Zoom Meet</span>
+          <span>Join Zoom</span>
         </a>
       </div>
-      <div className="agenda">
-        <button className="agendabutton" onClick={handleOpenModal}>View Agenda</button>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="close-modal" onClick={handleCloseModal}>×</button>
-            <h2>Agenda</h2>
-            
-            {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
-              <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} />
-            ) : (
-              <p>No agenda available.</p>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
