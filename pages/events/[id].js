@@ -18,29 +18,36 @@ const EventLoginPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false); // State to show/hide modal
 
-  useEffect(() => {
-    const checkRegistrationStatus = async () => {
+ useEffect(() => {
+  const checkRegistrationStatus = async () => {
+    // Clear user phone number on new event access
+    const storedEventId = localStorage.getItem('lastEventId');
+    if (storedEventId !== id) {
       localStorage.removeItem('userPhoneNumber');
-      const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-      if (userPhoneNumber && id) {
-        const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
-        const userDoc = await getDoc(registeredUserRef);
-        if (userDoc.exists()) {
-          setIsLoggedIn(true);
-          fetchEventDetails();
-          fetchRegisteredUserCount();
-          fetchUserName(userPhoneNumber);
-        } else {
-          // If user is not registered for this event, clear the localStorage and reset
-          setIsLoggedIn(false);
-          setPhoneNumber('');
-        }
-      }
-      setLoading(false);
-    };
+      localStorage.setItem('lastEventId', id); // Store new event ID
+    }
 
-    checkRegistrationStatus();
-  }, [id]);
+    const userPhoneNumber = localStorage.getItem('userPhoneNumber');
+    if (userPhoneNumber && id) {
+      const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+      const userDoc = await getDoc(registeredUserRef);
+      if (userDoc.exists()) {
+        setIsLoggedIn(true);
+        fetchEventDetails();
+        fetchRegisteredUserCount();
+        fetchUserName(userPhoneNumber);
+      } else {
+        // Reset if not registered for this event
+        setIsLoggedIn(false);
+        setPhoneNumber('');
+      }
+    }
+    setLoading(false);
+  };
+
+  checkRegistrationStatus();
+}, [id]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
