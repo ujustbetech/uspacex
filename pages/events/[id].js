@@ -46,7 +46,46 @@ const EventLoginPage = () => {
   };
 
   checkRegistrationStatus();
+}, [id]);useEffect(() => {
+  const checkRegistrationStatus = async () => {
+    const storedEventId = localStorage.getItem('lastEventId');
+    console.log('Current event ID:', id);
+    console.log('Stored event ID:', storedEventId);
+    
+    // Check if we're accessing a new event
+    if (storedEventId !== id) {
+      console.log('New event detected, clearing local storage');
+      localStorage.removeItem('userPhoneNumber');
+      localStorage.setItem('lastEventId', id); // Store new event ID
+      setIsLoggedIn(false);
+      setPhoneNumber(''); // Clear phone number input field
+    }
+
+    // Check if a user is logged in for the current event
+    const userPhoneNumber = localStorage.getItem('userPhoneNumber');
+    console.log('Current userPhoneNumber in localStorage:', userPhoneNumber);
+    
+    if (userPhoneNumber && id) {
+      const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+      const userDoc = await getDoc(registeredUserRef);
+      if (userDoc.exists()) {
+        console.log('User is registered for this event.');
+        setIsLoggedIn(true);
+        fetchEventDetails();
+        fetchRegisteredUserCount();
+        fetchUserName(userPhoneNumber);
+      } else {
+        console.log('User not registered for this event, resetting login state.');
+        setIsLoggedIn(false);
+        setPhoneNumber('');
+      }
+    }
+    setLoading(false);
+  };
+
+  checkRegistrationStatus();
 }, [id]);
+
 
 
   const handleLogin = async (e) => {
