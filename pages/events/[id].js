@@ -18,29 +18,31 @@ const EventLoginPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Check if the user is registered for this specific event
   useEffect(() => {
-    const checkRegistration = async () => {
+    const checkRegistrationStatus = async () => {
       const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-      if (userPhoneNumber) {
-        const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
-        const userDoc = await getDoc(doc(registeredUsersRef, userPhoneNumber));
-
+      if (userPhoneNumber && id) {
+        // Fetch the registration status from Firebase
+        const registeredUsersRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+        const userDoc = await getDoc(registeredUsersRef);
+  
         if (userDoc.exists()) {
           setIsLoggedIn(true);
           fetchEventDetails();
           fetchRegisteredUserCount();
           fetchUserName(userPhoneNumber);
         } else {
-          // Clear session if user is not registered for the event
-          clearSession();
+          // If not registered, clear storage and reset state
+          localStorage.removeItem('userPhoneNumber');
+          setIsLoggedIn(false);
+          setPhoneNumber(''); // Clear the input field
         }
       }
-      setLoading(false);
     };
-    
-    if (id) checkRegistration();
+  
+    checkRegistrationStatus();
   }, [id]);
+  
 
   const clearSession = () => {
     localStorage.removeItem('userPhoneNumber');
