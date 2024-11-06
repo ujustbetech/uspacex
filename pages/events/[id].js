@@ -5,7 +5,6 @@ import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import axios from 'axios';
 import './event.css'; // Ensure your CSS file is correctly linked
 
-
 const EventLoginPage = () => {
   const router = useRouter();
   const { id } = router.query; // Get event name from URL
@@ -31,8 +30,9 @@ const EventLoginPage = () => {
           fetchRegisteredUserCount();
           fetchUserName(userPhoneNumber);
         } else {
-          // If user is not registered for this event, clear the localStorage and reset
+          // If user is not registered for this event, clear the localStorage and sessionStorage
           localStorage.removeItem('userPhoneNumber');
+          sessionStorage.clear(); // Clear sessionStorage as well
           setIsLoggedIn(false);
           setPhoneNumber('');
         }
@@ -42,6 +42,7 @@ const EventLoginPage = () => {
 
     checkRegistrationStatus();
   }, [id]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -103,7 +104,6 @@ const EventLoginPage = () => {
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
         console.log(eventDoc.data());
-        
       } else {
         setError('No event found.');
       }
