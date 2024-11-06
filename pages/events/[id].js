@@ -20,8 +20,8 @@ const EventLoginPage = () => {
 
   useEffect(() => {
     const checkAuthentication = async () => {
-      // Check if the user is authenticated using a custom key in localStorage
-      const storedPhoneNumber = localStorage.getItem('authenticatedPhoneNumber');
+      // Check if the user is authenticated using sessionStorage (it will clear when the browser is closed)
+      const storedPhoneNumber = sessionStorage.getItem('authenticatedPhoneNumber');
 
       if (storedPhoneNumber) {
         // Use Firebase to check if the phone number is valid
@@ -36,8 +36,8 @@ const EventLoginPage = () => {
           fetchRegisteredUserCount();
           fetchUserName(storedPhoneNumber);
         } else {
-          // Invalid phone number, clear storage and force re-authentication
-          localStorage.removeItem('authenticatedPhoneNumber');
+          // Invalid phone number, clear sessionStorage and force re-authentication
+          sessionStorage.removeItem('authenticatedPhoneNumber');
           setIsLoggedIn(false);
           setPhoneNumber('');
         }
@@ -63,8 +63,8 @@ const EventLoginPage = () => {
         const userCredential = await auth.signInWithPhoneNumber(phoneNumber);
         const user = userCredential.user;
 
-        // Store phone number under custom key after successful login
-        localStorage.setItem('authenticatedPhoneNumber', phoneNumber);
+        // Store phone number under custom key in sessionStorage after successful login
+        sessionStorage.setItem('authenticatedPhoneNumber', phoneNumber);
 
         setIsLoggedIn(true);
 
