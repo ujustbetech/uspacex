@@ -20,65 +20,40 @@ const EventLoginPage = () => {
 
  useEffect(() => {
   const checkRegistrationStatus = async () => {
-    // Clear user phone number on new event access
-    const storedEventId = localStorage.getItem('lastEventId');
-    if (storedEventId !== id) {
-      localStorage.removeItem('userPhoneNumber');
-      localStorage.setItem('lastEventId', id); // Store new event ID
-    }
-
-    const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-    if (userPhoneNumber && id) {
-      const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
-      const userDoc = await getDoc(registeredUserRef);
-      if (userDoc.exists()) {
-        setIsLoggedIn(true);
-        fetchEventDetails();
-        fetchRegisteredUserCount();
-        fetchUserName(userPhoneNumber);
-      } else {
-        // Reset if not registered for this event
-        setIsLoggedIn(false);
-        setPhoneNumber('');
-      }
-    }
-    setLoading(false);
-  };
-
-  checkRegistrationStatus();
-}, [id]);useEffect(() => {
-  const checkRegistrationStatus = async () => {
     const storedEventId = localStorage.getItem('lastEventId');
     console.log('Current event ID:', id);
-    console.log('Stored event ID:', storedEventId);
+    console.log('Stored event ID in localStorage:', storedEventId);
     
-    // Check if we're accessing a new event
+    // Detect a new event and clear the previous user's phone number if the event has changed
     if (storedEventId !== id) {
-      console.log('New event detected, clearing local storage');
+      console.log('New event detected, clearing localStorage for userPhoneNumber');
       localStorage.removeItem('userPhoneNumber');
       localStorage.setItem('lastEventId', id); // Store new event ID
       setIsLoggedIn(false);
-      setPhoneNumber(''); // Clear phone number input field
+      setPhoneNumber(''); // Clear the phone number input field
     }
 
-    // Check if a user is logged in for the current event
+    // Retrieve user phone number if already set in localStorage
     const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-    console.log('Current userPhoneNumber in localStorage:', userPhoneNumber);
+    console.log('Retrieved userPhoneNumber from localStorage:', userPhoneNumber);
     
     if (userPhoneNumber && id) {
       const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
       const userDoc = await getDoc(registeredUserRef);
       if (userDoc.exists()) {
-        console.log('User is registered for this event.');
+        console.log('User is registered for this event:', userDoc.data());
         setIsLoggedIn(true);
         fetchEventDetails();
         fetchRegisteredUserCount();
         fetchUserName(userPhoneNumber);
       } else {
-        console.log('User not registered for this event, resetting login state.');
+        console.log('User is not registered for this event. Clearing state.');
         setIsLoggedIn(false);
         setPhoneNumber('');
+        localStorage.removeItem('userPhoneNumber'); // Clear if not registered
       }
+    } else {
+      console.log('No userPhoneNumber found or event ID is missing.');
     }
     setLoading(false);
   };
