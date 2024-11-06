@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import { db } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import axios from 'axios';
-import './event.css';
-import { IoMdClose } from "react-icons/io";
 
 const EventLoginPage = () => {
   const router = useRouter();
@@ -16,43 +14,36 @@ const EventLoginPage = () => {
   const [registeredUserCount, setRegisteredUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
+  // Check registration status on page load
   useEffect(() => {
     const checkRegistrationStatus = async () => {
       const userPhoneNumber = localStorage.getItem('userPhoneNumber');
       if (userPhoneNumber && id) {
-        // Fetch the registration status from Firebase
-        const registeredUsersRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
-        const userDoc = await getDoc(registeredUsersRef);
-  
+        const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+        const userDoc = await getDoc(registeredUserRef);
+        
         if (userDoc.exists()) {
           setIsLoggedIn(true);
           fetchEventDetails();
           fetchRegisteredUserCount();
           fetchUserName(userPhoneNumber);
         } else {
-          // If not registered, clear storage and reset state
+          // If user is not registered for this event, clear the localStorage and reset
           localStorage.removeItem('userPhoneNumber');
           setIsLoggedIn(false);
-          setPhoneNumber(''); // Clear the input field
+          setPhoneNumber('');
         }
       }
+      setLoading(false);
     };
-  
+
     checkRegistrationStatus();
   }, [id]);
-  
 
-  const clearSession = () => {
-    localStorage.removeItem('userPhoneNumber');
-    setIsLoggedIn(false);
-    setPhoneNumber('');
-  };
-
+  // Login handler
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post('https://api.ujustbe.com/mobile-check', {
         MobileNo: phoneNumber,
@@ -69,7 +60,6 @@ const EventLoginPage = () => {
         setError('Phone number not registered.');
       }
     } catch (err) {
-      console.error('Error during login:', err);
       setError('Login failed. Please try again.');
     }
   };
@@ -79,8 +69,7 @@ const EventLoginPage = () => {
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {
-      const name = userDoc.data()[" Name"];
-      setUserName(name);
+      setUserName(userDoc.data()[" Name"]);
     } else {
       setError('User not found.');
     }
@@ -90,15 +79,10 @@ const EventLoginPage = () => {
     if (id) {
       const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
       const newUserRef = doc(registeredUsersRef, phoneNumber);
-
-      try {
-        await setDoc(newUserRef, {
-          phoneNumber: phoneNumber,
-          registeredAt: new Date(),
-        });
-      } catch (err) {
-        console.error('Error registering user in Firebase:', err);
-      }
+      await setDoc(newUserRef, {
+        phoneNumber,
+        registeredAt: new Date(),
+      });
     }
   };
 
@@ -111,7 +95,6 @@ const EventLoginPage = () => {
       } else {
         setError('No event found.');
       }
-      setLoading(false);
     }
   };
 
@@ -123,106 +106,39 @@ const EventLoginPage = () => {
     }
   };
 
-  const handleOpenModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
-
-  if (loading) {
-    return (
-      <div className="loader-container">
-        <svg className="load" viewBox="25 25 50 50">
-          <circle r="20" cy="50" cx="50"></circle>
-        </svg>
-      </div>
-    );
-  }
-
+  // Render login form if user is not logged in
   if (!isLoggedIn) {
     return (
-      <div className='mainContainer'>
-        <div className='logosContainer'>
-          <img src="/ujustlogo.png" alt="Logo" className="logo" />
-        </div>
-        <div className="signin">
-          <div className="loginInput">
-            <div className='logoContainer'>
-              <img src="/logo.png" alt="Logo" className="logos" />
-            </div>
-            <form onSubmit={handleLogin}>
-              <ul>
-                <li>
-                  <input
-                    type="text"
-                    placeholder="Enter your phone number"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    required
-                  />
-                </li>
-                <li>
-                  <button className="login" type="submit">Login</button>
-                </li>
-              </ul>
-            </form>
-          </div>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-        </div>
+      <div className='login-container'>
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            placeholder="Enter your phone number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
       </div>
     );
   }
 
-  const eventTime = eventDetails?.time?.seconds
-  ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
-  : "Invalid time";
+  // Show loading state
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-return (
-  <div className="mainContainer">
-    <div className='UserDetails'>
-      <h1 className="welcomeText">Welcome {userName || 'User'}</h1>
-      <h2 className="eventName">to {eventDetails?.name || 'Event'}</h2>
+  // Display event details if user is logged in and registered
+  return (
+    <div className="event-container">
+      <h1>Welcome, {userName}</h1>
+      <h2>Event: {eventDetails?.name}</h2>
+      <p>Registered Orbiters: {registeredUserCount}</p>
+      <a href={eventDetails?.zoomLink} target="_blank">Join Zoom Meet</a>
     </div>
-    <div className="eventDetails">
-      <p>{eventTime}</p>
-      <h2>{registeredUserCount}</h2>
-      <p>Registered Orbiters</p>
-    </div>
-    <div className="zoomLinkContainer">
-      {eventDetails?.zoomLink ? (
-        <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
-          <img src="/zoom-icon.png" alt="Zoom Link" width={30} />
-          <span>Join Zoom Meet</span>
-        </a>
-      ) : (
-        <span>No Zoom link available</span>
-      )}
-    </div>
-    <div className="agenda">
-      <button className="agendabutton" onClick={handleOpenModal}>View Agenda</button>
-    </div>
-
-    {showModal && (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <button className="close-modal" onClick={handleCloseModal}>×</button>
-          <h2>Agenda</h2>
-          {eventDetails?.agenda ? (
-            <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }}></div>
-          ) : (
-            <p>No agenda available.</p>
-          )}
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-    
+  );
 };
 
 export default EventLoginPage;
