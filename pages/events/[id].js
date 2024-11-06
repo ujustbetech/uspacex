@@ -3,46 +3,48 @@ import { useRouter } from 'next/router';
 import { db, auth } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import axios from 'axios';
-import './event.css'; // Ensure your CSS file is correctly linked
+import './event.css';
 import { onAuthStateChanged } from 'firebase/auth';  // Import Firebase Auth state change listener
 
 const EventLoginPage = () => {
   const router = useRouter();
-  const { id } = router.query; // Get event name from URL
+  const { id } = router.query;
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [userName, setUserName] = useState(''); // State to store user name
+  const [userName, setUserName] = useState('');
   const [error, setError] = useState(null);
   const [eventDetails, setEventDetails] = useState(null);
   const [registeredUserCount, setRegisteredUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showModal, setShowModal] = useState(false); // State to show/hide modal
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const checkAuthentication = () => {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const userPhoneNumber = user.phoneNumber;  // Use Firebase Auth's phone number
-          if (userPhoneNumber && id) {
-            const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
-            const userDoc = await getDoc(registeredUserRef);
-            if (userDoc.exists()) {
-              setIsLoggedIn(true);
-              fetchEventDetails();
-              fetchRegisteredUserCount();
-              fetchUserName(userPhoneNumber);
-            } else {
-              // If user is not registered for this event
-              setIsLoggedIn(false);
-              setPhoneNumber('');
-            }
-          }
+    const checkAuthentication = async () => {
+      // Check if the user is authenticated using a custom key in localStorage
+      const storedPhoneNumber = localStorage.getItem('authenticatedPhoneNumber');
+
+      if (storedPhoneNumber) {
+        // Use Firebase to check if the phone number is valid
+        const userRef = doc(db, 'userdetails', storedPhoneNumber);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          // Phone number is valid, continue with event logic
+          setPhoneNumber(storedPhoneNumber);
+          setIsLoggedIn(true);
+          fetchEventDetails();
+          fetchRegisteredUserCount();
+          fetchUserName(storedPhoneNumber);
         } else {
-          // No user logged in, redirect to login screen
+          // Invalid phone number, clear storage and force re-authentication
+          localStorage.removeItem('authenticatedPhoneNumber');
           setIsLoggedIn(false);
           setPhoneNumber('');
         }
-      });
+      } else {
+        setIsLoggedIn(false);
+        setPhoneNumber('');
+      }
     };
 
     checkAuthentication();
@@ -57,15 +59,19 @@ const EventLoginPage = () => {
       });
 
       if (response.data.message[0].type === 'SUCCESS') {
-        // Simulating Firebase Auth login with phone number
+        // Simulate Firebase Auth login with phone number
         const userCredential = await auth.signInWithPhoneNumber(phoneNumber);
         const user = userCredential.user;
+
+        // Store phone number under custom key after successful login
+        localStorage.setItem('authenticatedPhoneNumber', phoneNumber);
+
         setIsLoggedIn(true);
 
         await registerUserForEvent(phoneNumber);
         fetchEventDetails();
         fetchRegisteredUserCount();
-        fetchUserName(phoneNumber); // Fetch user name after login
+        fetchUserName(phoneNumber);
       } else {
         setError('Phone number not registered.');
       }
@@ -80,7 +86,7 @@ const EventLoginPage = () => {
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {
-      const name = userDoc.data()[" Name"]; // Access the Name field with the space
+      const name = userDoc.data()[" Name"];
       setUserName(name);
     } else {
       setError('User not found.');
@@ -103,14 +109,12 @@ const EventLoginPage = () => {
     }
   };
 
-  // Fetch event details from Firestore
   const fetchEventDetails = async () => {
     if (id) {
       const eventRef = doc(db, 'monthlymeet', id);
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
-        console.log(eventDoc.data());
       } else {
         setError('No event found.');
       }
@@ -118,7 +122,6 @@ const EventLoginPage = () => {
     }
   };
 
-  // Fetch the count of registered users from Firestore
   const fetchRegisteredUserCount = async () => {
     if (id) {
       const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
@@ -187,14 +190,13 @@ const EventLoginPage = () => {
   const eventTime = eventDetails?.time?.seconds
   ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
       day: '2-digit',
-      month: 'short', // Abbreviated month name like "Jan"
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false // For 24-hour format
+      hour12: false
     })
   : "Invalid time";
-
 
   return (
     <div className="mainContainer">
@@ -208,16 +210,11 @@ const EventLoginPage = () => {
         <p>Registered Orbiters</p>
       </div>
       <div className="zoomLinkContainer">
-        <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
-          <img src="/zoom-icon.png" alt="Zoom Link" width={30} />
-          <span>Join Zoom Meet</span>
-        </a>
+        <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">Join Zoom</a>
       </div>
-      <div className="agenda">
-        <button className="agendabutton" onClick={handleOpenModal}>View Agenda</button>
+      <div className="agendaContainer">
+        <button className="agendaButton" onClick={handleOpenModal}>View Agenda</button>
       </div>
-
-      {/* Modal */}
       {showModal && (
         <div className="modal">
           <div className="modal-content">
