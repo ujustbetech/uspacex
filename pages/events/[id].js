@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { db } from '../../firebaseConfig';
+import { db, auth } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import axios from 'axios';
 import './event.css'; // Ensure your CSS file is correctly linked
+import { onAuthStateChanged } from 'firebase/auth';  // Import Firebase Auth state change listener
 
 const EventLoginPage = () => {
   const router = useRouter();
@@ -18,29 +19,33 @@ const EventLoginPage = () => {
   const [showModal, setShowModal] = useState(false); // State to show/hide modal
 
   useEffect(() => {
-    const checkRegistrationStatus = async () => {
-      const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-      if (userPhoneNumber && id) {
-        const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
-        const userDoc = await getDoc(registeredUserRef);
-        console.log(userDoc);
-        if (userDoc.exists()) {
-          setIsLoggedIn(true);
-          fetchEventDetails();
-          fetchRegisteredUserCount();
-          fetchUserName(userPhoneNumber);
+    const checkAuthentication = () => {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const userPhoneNumber = user.phoneNumber;  // Use Firebase Auth's phone number
+          if (userPhoneNumber && id) {
+            const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+            const userDoc = await getDoc(registeredUserRef);
+            if (userDoc.exists()) {
+              setIsLoggedIn(true);
+              fetchEventDetails();
+              fetchRegisteredUserCount();
+              fetchUserName(userPhoneNumber);
+            } else {
+              // If user is not registered for this event
+              setIsLoggedIn(false);
+              setPhoneNumber('');
+            }
+          }
         } else {
-          // If user is not registered for this event, clear the localStorage and sessionStorage
-          localStorage.removeItem('userPhoneNumber');
-          sessionStorage.clear(); // Clear sessionStorage as well
+          // No user logged in, redirect to login screen
           setIsLoggedIn(false);
           setPhoneNumber('');
         }
-      }
-      setLoading(false);
+      });
     };
 
-    checkRegistrationStatus();
+    checkAuthentication();
   }, [id]);
 
   const handleLogin = async (e) => {
@@ -52,7 +57,9 @@ const EventLoginPage = () => {
       });
 
       if (response.data.message[0].type === 'SUCCESS') {
-        localStorage.setItem('userPhoneNumber', phoneNumber);
+        // Simulating Firebase Auth login with phone number
+        const userCredential = await auth.signInWithPhoneNumber(phoneNumber);
+        const user = userCredential.user;
         setIsLoggedIn(true);
 
         await registerUserForEvent(phoneNumber);
@@ -212,17 +219,10 @@ const EventLoginPage = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="modal-overlay">
+        <div className="modal">
           <div className="modal-content">
-            <button className="close-modal" onClick={handleCloseModal}>×</button>
-            <h2>Agenda</h2>
-            
-            {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
-              <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} >
-              </div>
-            ) : (
-              <p>No agenda available.</p>
-            )}
+            <span className="close-btn" onClick={handleCloseModal}>×</span>
+            <h2>{eventDetails.agenda}</h2>
           </div>
         </div>
       )}
