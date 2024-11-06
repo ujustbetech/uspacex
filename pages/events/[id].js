@@ -6,7 +6,7 @@ import axios from 'axios';
 import './event.css'; // Ensure your CSS file is correctly linked
 import { IoMdClose } from "react-icons/io";
 
-const EventLoginPage = () => {
+const EventLoginPage = () => {  
   const router = useRouter();
   const { id } = router.query; // Get event name from URL
   const [phoneNumber, setPhoneNumber] = useState('');
