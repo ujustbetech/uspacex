@@ -18,19 +18,29 @@ const EventLoginPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false); // State to show/hide modal
 
-  // This effect will only run on the client side to check for localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') { // Make sure it's only executed on the client
+    const checkRegistrationStatus = async () => {
+      localStorage.removeItem('userPhoneNumber');
       const userPhoneNumber = localStorage.getItem('userPhoneNumber');
-      if (userPhoneNumber) {
-        setIsLoggedIn(true);
-        fetchEventDetails();
-        fetchRegisteredUserCount();
-        fetchUserName(userPhoneNumber); // Fetch user name
+      if (userPhoneNumber && id) {
+        const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+        const userDoc = await getDoc(registeredUserRef);
+        if (userDoc.exists()) {
+          setIsLoggedIn(true);
+          fetchEventDetails();
+          fetchRegisteredUserCount();
+          fetchUserName(userPhoneNumber);
+        } else {
+          // If user is not registered for this event, clear the localStorage and reset
+          setIsLoggedIn(false);
+          setPhoneNumber('');
+        }
       }
-      setLoading(false); // Set loading to false when effect runs
-    }
-  }, [id]); // Ensure this effect runs when the id (event name) changes
+      setLoading(false);
+    };
+
+    checkRegistrationStatus();
+  }, [id]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -92,10 +102,10 @@ const EventLoginPage = () => {
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
-        console.log(eventDoc.data());
       } else {
         setError('No event found.');
       }
+      setLoading(false);
     }
   };
 
@@ -116,16 +126,6 @@ const EventLoginPage = () => {
   const handleCloseModal = () => {
     setShowModal(false);
   };
-
-  if (loading) {
-    return (
-      <div className="loader-container">
-        <svg className="load" viewBox="25 25 50 50">
-          <circle r="20" cy="50" cx="50"></circle>
-        </svg>
-      </div>
-    );
-  }
 
   if (!isLoggedIn) {
     return (
@@ -161,6 +161,16 @@ const EventLoginPage = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="loader-container">
+        <svg className="load" viewBox="25 25 50 50">
+          <circle r="20" cy="50" cx="50"></circle>
+        </svg>
+      </div>
+    );
+  }
+
   if (error) {
     return <p style={{ color: 'red' }}>{error}</p>;
   }
@@ -180,15 +190,15 @@ const EventLoginPage = () => {
     <div className="mainContainer">
       <div className='UserDetails'>
         <h1 className="welcomeText">Welcome {userName || 'User'}</h1>
-        <h2 className="eventName">to {eventDetails.name}</h2>
+        <h2 className="eventName">to {eventDetails ? eventDetails.name : 'Event not found'}</h2>
       </div>
       <div className="eventDetails">
-        <p> {eventTime}</p>
+        <p>{eventTime}</p>
         <h2>{registeredUserCount}</h2>
         <p>Registered Orbiters</p>
       </div>
       <div className="zoomLinkContainer">
-        <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
+        <a href={eventDetails?.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
           <img src="/zoom-icon.png" alt="Zoom Link" width={30} />
           <span>Join Zoom Meet</span>
         </a>
@@ -203,10 +213,8 @@ const EventLoginPage = () => {
           <div className="modal-content">
             <button className="close-modal" onClick={handleCloseModal}>×</button>
             <h2>Agenda</h2>
-            
-            {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
-              <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} >
-              </div>
+            {eventDetails?.agenda && eventDetails.agenda.length > 0 ? (
+              <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} />
             ) : (
               <p>No agenda available.</p>
             )}
