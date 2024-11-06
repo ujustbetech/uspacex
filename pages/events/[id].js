@@ -4,7 +4,7 @@ import { db } from '../../firebaseConfig';
 import { doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import axios from 'axios';
 import './event.css'; // Ensure your CSS file is correctly linked
-import { IoMdClose } from "react-icons/io";
+
 
 const EventLoginPage = () => {
   const router = useRouter();
@@ -18,32 +18,30 @@ const EventLoginPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false); // State to show/hide modal
 
-  // Clear session storage whenever the event ID changes (i.e., when a new event link is clicked)
   useEffect(() => {
-    sessionStorage.removeItem('userPhoneNumber'); // Clear session storage
-    setIsLoggedIn(false); // Set login status to false
-    setPhoneNumber(''); // Reset phone number state
-    setUserName(''); // Reset user name state
-    setEventDetails(null); // Reset event details
+    const checkRegistrationStatus = async () => {
+      const userPhoneNumber = localStorage.getItem('userPhoneNumber');
+      if (userPhoneNumber && id) {
+        const registeredUserRef = doc(db, 'monthlymeet', id, 'registeredUsers', userPhoneNumber);
+        const userDoc = await getDoc(registeredUserRef);
+        console.log(userDoc);
+        if (userDoc.exists()) {
+          setIsLoggedIn(true);
+          fetchEventDetails();
+          fetchRegisteredUserCount();
+          fetchUserName(userPhoneNumber);
+        } else {
+          // If user is not registered for this event, clear the localStorage and reset
+          localStorage.removeItem('userPhoneNumber');
+          setIsLoggedIn(false);
+          setPhoneNumber('');
+        }
+      }
+      setLoading(false);
+    };
 
-    fetchEventDetails();
-    fetchRegisteredUserCount();
-
-  }, [id]); // Runs whenever the event ID changes
-
-  // Check if the user is already logged in from sessionStorage
-  useEffect(() => {
-    const userPhoneNumber = sessionStorage.getItem('userPhoneNumber');
-    if (userPhoneNumber) {
-      setIsLoggedIn(true);
-      fetchUserName(userPhoneNumber); // Fetch user name
-      checkRegisteredUser(userPhoneNumber); // Check if the user is registered for this event
-    } else {
-      // If no userPhoneNumber found in sessionStorage, redirect to login page
-      router.push("/login"); 
-    }
+    checkRegistrationStatus();
   }, [id]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -53,14 +51,13 @@ const EventLoginPage = () => {
       });
 
       if (response.data.message[0].type === 'SUCCESS') {
-        sessionStorage.setItem('userPhoneNumber', phoneNumber); // Store in sessionStorage for the current session
+        localStorage.setItem('userPhoneNumber', phoneNumber);
         setIsLoggedIn(true);
 
         await registerUserForEvent(phoneNumber);
         fetchEventDetails();
         fetchRegisteredUserCount();
         fetchUserName(phoneNumber); // Fetch user name after login
-        checkRegisteredUser(phoneNumber); // Ensure the user is registered for the event
       } else {
         setError('Phone number not registered.');
       }
@@ -73,7 +70,7 @@ const EventLoginPage = () => {
   const fetchUserName = async (phoneNumber) => {
     const userRef = doc(db, 'userdetails', phoneNumber);
     const userDoc = await getDoc(userRef);
-
+    
     if (userDoc.exists()) {
       const name = userDoc.data()[" Name"]; // Access the Name field with the space
       setUserName(name);
@@ -105,6 +102,8 @@ const EventLoginPage = () => {
       const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
         setEventDetails(eventDoc.data());
+        console.log(eventDoc.data());
+        
       } else {
         setError('No event found.');
       }
@@ -118,22 +117,6 @@ const EventLoginPage = () => {
       const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
       const userSnapshot = await getDocs(registeredUsersRef);
       setRegisteredUserCount(userSnapshot.size);
-    }
-  };
-
-  // Check if the user is registered for this event
-  const checkRegisteredUser = async (phoneNumber) => {
-    if (id) {
-      const registeredUsersRef = collection(db, 'monthlymeet', id, 'registeredUsers');
-      const userSnapshot = await getDocs(registeredUsersRef);
-      const isRegistered = userSnapshot.docs.some(doc => doc.id === phoneNumber);
-
-      if (!isRegistered) {
-        // Clear sessionStorage if the user is not registered for the event
-        sessionStorage.clear();
-        setIsLoggedIn(false);  // Set the user as not logged in
-        router.push("/login"); // Redirect to login page if the user is not registered
-      }
     }
   };
 
@@ -195,15 +178,16 @@ const EventLoginPage = () => {
   }
 
   const eventTime = eventDetails?.time?.seconds
-    ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short', // Abbreviated month name like "Jan"
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false // For 24-hour format
-      })
-    : "Invalid time";
+  ? new Date(eventDetails.time.seconds * 1000).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short', // Abbreviated month name like "Jan"
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false // For 24-hour format
+    })
+  : "Invalid time";
+
 
   return (
     <div className="mainContainer">
@@ -212,16 +196,36 @@ const EventLoginPage = () => {
         <h2 className="eventName">to {eventDetails.name}</h2>
       </div>
       <div className="eventDetails">
-        <p>{eventTime}</p>
+        <p> {eventTime}</p>
         <h2>{registeredUserCount}</h2>
         <p>Registered Orbiters</p>
       </div>
       <div className="zoomLinkContainer">
         <a href={eventDetails.zoomLink} target="_blank" rel="noopener noreferrer" className="zoomLink">
           <img src="/zoom-icon.png" alt="Zoom Link" width={30} />
-          <span>Join Zoom</span>
+          <span>Join Zoom Meet</span>
         </a>
       </div>
+      <div className="agenda">
+        <button className="agendabutton" onClick={handleOpenModal}>View Agenda</button>
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="close-modal" onClick={handleCloseModal}>×</button>
+            <h2>Agenda</h2>
+            
+            {eventDetails.agenda && eventDetails.agenda.length > 0 ? (
+              <div dangerouslySetInnerHTML={{ __html: eventDetails.agenda }} >
+              </div>
+            ) : (
+              <p>No agenda available.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
