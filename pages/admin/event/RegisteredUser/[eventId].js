@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db } from '../../../../firebaseConfig';
-import { collection, getDocs, doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, arrayUnion,query,orderBy,onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/router'; 
 import Layout from '../../../../component/Layout';
 import "../../../../src/app/styles/main.scss";
@@ -58,43 +58,51 @@ const RegisteredUsers = () => {
     "Other response",
   ];
 
-  // Fetch registered users based on eventId
   useEffect(() => {
-    const fetchRegisteredUsers = async () => {
-      if (!eventId) return; 
-      try {
-        const registeredUsersCollection = collection(db, `monthlymeet/${eventId}/registeredUsers`);
-        const registeredUsersSnapshot = await getDocs(registeredUsersCollection);
-
-        const userDetails = registeredUsersSnapshot.docs.map(doc => ({
-          id: doc.id,
+    if (!eventId) return;  // Ensure eventId is available
+  
+    const registeredUsersRef = collection(db, `monthlymeet/${eventId}/registeredUsers`);
+    const usersQuery = query(registeredUsersRef, orderBy('registeredAt', 'desc'));
+  
+    const unsubscribe = onSnapshot(usersQuery, async (snapshot) => {
+      if (!snapshot.empty) {
+        const userDetails = snapshot.docs.map((doc) => ({
+          id: doc.id, // User's phone number as doc ID
           ...doc.data(),
         }));
-
-        const nameAndUJBPromises = userDetails.map(async (user) => {
-          const userDocRef = doc(db, `userdetails/${user.id}`);
-          const userDocSnap = await getDoc(userDocRef);
-
-          return {
-            id: user.id,
-            name: userDocSnap.exists() ? userDocSnap.data()[" Name"] : 'Unknown',
-            ujbcode: userDocSnap.exists() ? userDocSnap.data()["UJB Code"] : 'Unknown',  
-            category: userDocSnap.exists() ? userDocSnap.data()["Category"] : 'Unknown',  
-            ...user,
-          };
-        });
-
-        const usersWithNamesAndUJB = await Promise.all(nameAndUJBPromises);
-        setRegisteredUsers(usersWithNamesAndUJB);
-      } catch (error) {
-        console.error('Error fetching registered users:', error);
-        setError('Error fetching registered users. Please try again.');
+  
+        try {
+          const nameAndUJBPromises = userDetails.map(async (user) => {
+            const userDocRef = doc(db, `userdetails/${user.id}`);
+            const userDocSnap = await getDoc(userDocRef);
+  
+            return {
+              id: user.id,
+              name: userDocSnap.exists() ? userDocSnap.data()[" Name"] : 'Unknown',
+              ujbcode: userDocSnap.exists() ? userDocSnap.data()["UJB Code"] : 'Unknown',
+              category: userDocSnap.exists() ? userDocSnap.data()["Category"] : 'Unknown',
+              ...user,
+            };
+          });
+  
+          const completeUsers = await Promise.all(nameAndUJBPromises);
+          setRegisteredUsers(completeUsers);
+          console.log("Fetched Users with Details:", completeUsers);
+  
+        } catch (error) {
+          console.error("Error fetching additional user details:", error);
+        }
+      } else {
+        console.log("No registered users found.");
+        setRegisteredUsers([]);
       }
-    };
-
-    fetchRegisteredUsers();
+    }, (error) => {
+      console.error('Error fetching registered users:', error);
+    });
+  
+    return () => unsubscribe();  // Cleanup listener on unmount
   }, [eventId]);
-
+  
  useEffect(() => {
     const filtered = registeredUsers.filter((user) =>
       (user.id || '').toLowerCase().includes(registeredNumberFilter.toLowerCase()) &&
